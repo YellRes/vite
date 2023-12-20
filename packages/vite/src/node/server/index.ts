@@ -668,6 +668,11 @@ export async function _createServer(
   }
 
   watcher.on('change', async (file) => {
+    /**
+     * updateHmr start
+     * file: '/Users/zhangyellres/Desktop/lego-v2/src/App.vue'
+     * 
+     * */ 
     file = normalizePath(file)
     await container.watchChange(file, { event: 'update' })
     // invalidate module graph cache on file change

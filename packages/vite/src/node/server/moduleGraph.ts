@@ -140,6 +140,7 @@ export class ModuleGraph {
   onFileChange(file: string): void {
     const mods = this.getModulesByFile(file)
     if (mods) {
+      // 已经遍历过的模块
       const seen = new Set<ModuleNode>()
       mods.forEach((mod) => {
         this.invalidateModule(mod, seen)
@@ -147,6 +148,17 @@ export class ModuleGraph {
     }
   }
 
+  /**
+   * 触发逻辑
+   * 1.文件改动 => moduleGraph.onFileChange(file)
+   * 2.this.invalidateModule(mod, seen) timestamp = 触发时间，isHmr = false, softInvalidate = false
+   * 3.修改当前模块的transformResult
+   *  3.1 如果
+   * 4.遍历当前module中importers集合，
+   *  4.1 如果当前模块是importer的静态导入(staticImportedUrls)，此时执行this.invalidateModule(mod, seen, timestamp, isHmr, true) 
+   *  4.2 非静态导入 this.invalidateModule(mod, seen, timestamp, isHmr, false) 
+   * 
+  */
   invalidateModule(
     mod: ModuleNode,
     seen: Set<ModuleNode> = new Set(),
@@ -157,11 +169,13 @@ export class ModuleGraph {
   ): void {
     const prevInvalidationState = mod.invalidationState
     const prevSsrInvalidationState = mod.ssrInvalidationState
+    debugger
 
     // Handle soft invalidation before the `seen` check, as consecutive soft/hard invalidations can
     // cause the final soft invalidation state to be different.
     // If soft invalidated, save the previous `transformResult` so that we can reuse and transform the
     // import timestamps only in `transformRequest`. If there's no previous `transformResult`, hard invalidate it.
+    debugger
     if (softInvalidate) {
       mod.invalidationState ??= mod.transformResult ?? 'HARD_INVALIDATED'
       mod.ssrInvalidationState ??= mod.ssrTransformResult ?? 'HARD_INVALIDATED'
@@ -173,6 +187,7 @@ export class ModuleGraph {
     }
 
     // Skip updating the module if it was already invalidated before and the invalidation state has not changed
+    debugger
     if (
       seen.has(mod) &&
       prevInvalidationState === mod.invalidationState &&
@@ -196,8 +211,11 @@ export class ModuleGraph {
     mod.ssrTransformResult = null
     mod.ssrModule = null
     mod.ssrError = null
-
+    
+    debugger
     mod.importers.forEach((importer) => {
+      debugger
+      // 动态导入或者静态导入
       if (!importer.acceptedHmrDeps.has(mod)) {
         // If the importer statically imports the current module, we can soft-invalidate the importer
         // to only update the import timestamps. If it's not statically imported, e.g. watched/glob file,

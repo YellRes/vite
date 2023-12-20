@@ -56,6 +56,7 @@ export async function handleHMRUpdate(
   server: ViteDevServer,
   configOnly: boolean,
 ): Promise<void> {
+  debugger
   const { ws, config, moduleGraph } = server
   const shortFile = getShortName(file, config.root)
   const fileName = path.basename(file)
